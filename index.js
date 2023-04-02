@@ -1,5 +1,7 @@
 let activeEffect 
 
+const effectStack =  []
+
 const bucket = new WeakMap()
 
 const  data = {foo:true,bar:true}
@@ -48,7 +50,10 @@ function  effect(fn) {
   const effectFn = () => {
     cleanup(effectFn)
     activeEffect = effectFn
+    effectStack.push(effectFn)
     fn() 
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length-1]
   }
   effectFn.deps = []
   effectFn()
