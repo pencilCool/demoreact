@@ -2,7 +2,7 @@ let activeEffect
 
 const bucket = new WeakMap()
 
-const  data = {ok:true,text:"hello world"}
+const  data = {foo:true,bar:true}
 const obj = new Proxy(data,{
   get(target,key) {
     track(target,key)
@@ -54,15 +54,21 @@ function  effect(fn) {
   effectFn()
 }
 
-effect(()=>{
-  var a = obj.ok ? obj.text : 'no'
-  console.log("in effect:",a)
+let temp1,temp2
+
+effect(function effectFn1(){
+  console.log("effectFn1")
+
+  effect(function effectFn2(){
+    console.log("effectFn2")
+    temp2 = obj.bar 
+  })
+  temp1 = obj.foo
+  
 })
 
 setTimeout(()=>{
-  obj.ok = false
-  obj.text = "1"
-  obj.text = "2"
+  obj.foo = false
 },1000)
 
 
