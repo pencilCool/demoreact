@@ -4,7 +4,7 @@ const effectStack =  []
 
 const bucket = new WeakMap()
 
-var  data = {foo:1}
+var  data = {foo:1,bar:2}
 const obj = new Proxy(data,{
   get(target,key) {
     track(target,key)
@@ -62,13 +62,17 @@ function  effect(fn,options = {}) {
     cleanup(effectFn)
     activeEffect = effectFn
     effectStack.push(effectFn)
-    fn() 
+    const res = fn() 
     effectStack.pop()
     activeEffect = effectStack[effectStack.length-1]
+    return res
   }
   effectFn.options = options
   effectFn.deps = []
-  effectFn()
+  if (!options.lazy) {
+    effectFn()
+  } 
+  return effectFn
 }
 
 const jobQueue = new Set() 
@@ -85,15 +89,35 @@ function flushJob() {
   })
 }
 
-effect(() =>{
-  console.log(obj.foo)
-},{
-  scheduler(fn) {
-     jobQueue.add(fn)
-     flushJob()
+function computed(getter) {
+  let value
+  let dirty = true 
+  const effectFn = effect(getter,{
+    lazy:true,
+    scheduler() {
+      dirty = true
+      trigger(obj,value)
+    }
+  })
+
+  const obj = {
+    get value() {
+      if(dirty) {
+        value = effectFn()
+        dirty = false
+      }
+      track(obj,value)
+      return value
+    }
   }
+  return obj
+}
+
+
+const sumRes = computed(()=> obj.foo + obj.bar)
+effect(function effectFn() {
+  console.log("in")
+  console.log(sumRes.value)
 })
 
-obj.foo++
-obj.foo++
-
+obj.foo ++ 
