@@ -71,14 +71,29 @@ function  effect(fn,options = {}) {
   effectFn()
 }
 
+const jobQueue = new Set() 
+const p = Promise.resolve()
+
+let isFulshing = false
+function flushJob() {
+  if (isFulshing) return 
+  isFulshing = true
+  p.then(()=>{
+    jobQueue.forEach(job=>job())
+  }).finally(()=>{
+    isFulshing = false
+  })
+}
+
 effect(() =>{
   console.log(obj.foo)
 },{
-  scheduler(fn){
-     setTimeout(fn);
+  scheduler(fn) {
+     jobQueue.add(fn)
+     flushJob()
   }
 })
 
 obj.foo++
+obj.foo++
 
-console.log("end")
