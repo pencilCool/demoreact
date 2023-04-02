@@ -2,7 +2,7 @@ let activeEffect
 
 const bucket = new WeakMap()
 
-const  data = {text:"hello world"}
+const  data = {ok:true,text:"hello world"}
 const obj = new Proxy(data,{
   get(target,key) {
     track(target,key)
@@ -39,16 +39,14 @@ function  effect(fn) {
 }
 
 effect(()=>{
-  var a = obj.text
+  var a = obj.ok ? obj.text : 'no'
   console.log("in effect:",a)
 })
 
 setTimeout(()=>{
-  obj.noExist = "hello vue3"
-},1000)
-
-setTimeout(()=>{
-  obj.text = "hello you"
+  obj.ok = false
+  obj.text = "1"
+  obj.text = "2"
 },1000)
 
 
