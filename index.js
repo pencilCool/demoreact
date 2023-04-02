@@ -25,17 +25,33 @@ function track(target,key) {
     depsMap.set(key,(deps = new Set()))    
   }
   deps.add(activeEffect)
+  activeEffect.deps.push(deps)
 }
 
 function trigger(target,key) {
   const depsMap = bucket.get(target)
   if(!depsMap) return
   const effects = depsMap.get(key)
-  effects && effects.forEach(fn => fn());
+  const effectsToRun = new Set(effects)
+  effectsToRun && effectsToRun.forEach(fn => fn());
 }
+
+function cleanup(effectFn) {
+  for(let i= 0;i< effectFn.deps.length;i++) {
+    const deps = effectFn.deps[i]
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length == 0
+}
+
 function  effect(fn) {
-  activeEffect = fn
-  fn() 
+  const effectFn = () => {
+    cleanup(effectFn)
+    activeEffect = effectFn
+    fn() 
+  }
+  effectFn.deps = []
+  effectFn()
 }
 
 effect(()=>{
