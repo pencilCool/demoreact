@@ -40,7 +40,13 @@ function trigger(target,key) {
       effectsToRun.add(effectFn)
     }
   });
-  effectsToRun.forEach(effectFn => effectFn());
+  effectsToRun.forEach(effectFn => {
+    if(effectFn.options.scheduler) {
+      effectFn.options.scheduler(effectFn)
+    } else {
+      effectFn()
+    }
+  });
 }
 
 function cleanup(effectFn) {
@@ -51,7 +57,7 @@ function cleanup(effectFn) {
   effectFn.deps.length == 0
 }
 
-function  effect(fn) {
+function  effect(fn,options = {}) {
   const effectFn = () => {
     cleanup(effectFn)
     activeEffect = effectFn
@@ -60,14 +66,19 @@ function  effect(fn) {
     effectStack.pop()
     activeEffect = effectStack[effectStack.length-1]
   }
+  effectFn.options = options
   effectFn.deps = []
   effectFn()
 }
 
 effect(() =>{
-  console.log("effect")
-  obj.foo = obj.foo + 1
+  console.log(obj.foo)
+},{
+  scheduler(fn){
+     setTimeout(fn);
+  }
 })
 
+obj.foo++
 
-
+console.log("end")
