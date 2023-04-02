@@ -1,8 +1,12 @@
+let activeEffect 
+
 const bucket = new Set()
 const  data = {text:"hello world"}
 const obj = new Proxy(data,{
   get(target,key) {
-    bucket.add(effect)
+    if(activeEffect) {
+      bucket.add(activeEffect)
+    }
     return target[key]
   },
   set(target,key,newVal) {
@@ -12,12 +16,15 @@ const obj = new Proxy(data,{
   }
 })
 
-function  effect() {
-  var a = obj.text
-  console.log("in effect:",a)
+function  effect(fn) {
+  activeEffect = fn
+  fn() 
 }
 
-effect()
+effect(()=>{
+  var a = obj.text
+  console.log("in effect:",a)
+})
 
 setTimeout(()=>{
   obj.text = "hello vue3"
