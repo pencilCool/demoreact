@@ -1,18 +1,29 @@
 let activeEffect 
 
-const bucket = new Set()
+const bucket = new WeakMap()
+
 const  data = {text:"hello world"}
 const obj = new Proxy(data,{
   get(target,key) {
-    if(activeEffect) {
-      bucket.add(activeEffect)
+    if(!activeEffect) return target[key]
+    let depsMap = bucket.get(target) 
+    if (!depsMap) {
+      bucket.set(target,(depsMap = new Map()))
     }
+    let deps = depsMap.get(key)
+    if(!deps) {
+      depsMap.set(key,(deps = new Set()))    
+    }
+    deps.add(activeEffect)
     return target[key]
   },
   set(target,key,newVal) {
     target[key] = newVal
-    bucket.forEach(fn => fn());
-    return true
+    
+    const depsMap = bucket.get(target)
+    if(!depsMap) return
+    const effects = depsMap.get(key)
+    effects && effects.forEach(fn => fn());
   }
 })
 
@@ -27,6 +38,6 @@ effect(()=>{
 })
 
 setTimeout(()=>{
-  obj.noExis = "hello vue3"
+  obj.noExist = "hello vue3"
 },1000)
 
