@@ -27,6 +27,6 @@ effect(()=>{
 })
 
 setTimeout(()=>{
-  obj.text = "hello vue3"
+  obj.noExis = "hello vue3"
 },1000)
 
