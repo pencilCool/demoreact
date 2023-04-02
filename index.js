@@ -4,7 +4,7 @@ const effectStack =  []
 
 const bucket = new WeakMap()
 
-const  data = {foo:true,bar:true}
+var  data = {foo:1}
 const obj = new Proxy(data,{
   get(target,key) {
     track(target,key)
@@ -59,21 +59,10 @@ function  effect(fn) {
   effectFn()
 }
 
-let temp1,temp2
-
-effect(function effectFn1(){
-  console.log("effectFn1")
-
-  effect(function effectFn2(){
-    console.log("effectFn2")
-    temp2 = obj.bar 
-  })
-  temp1 = obj.foo
-  
+effect(() =>{
+  console.log("effect")
+  obj.foo = obj.foo + 1
 })
 
-setTimeout(()=>{
-  obj.foo = false
-},1000)
 
 
