@@ -133,9 +133,16 @@ function watch(source, cb, options = {}) {
   }
 
   let oldValue, newValue;
+  let cleanup;
+  function onInvalidate(fn) {
+    cleanup = fn;
+  }
   const job = () => {
     newValue = effectFn();
-    cb(newValue, oldValue);
+    if (cleanup) {
+      cleanup();
+    }
+    cb(newValue, oldValue, onInvalidate);
     oldValue = newValue;
   };
   const effectFn = effect(() => getter(), {
@@ -145,7 +152,7 @@ function watch(source, cb, options = {}) {
         const p = Promise.resolve();
         p.then(job);
       } else {
-        job;
+        job();
       }
     },
   });
@@ -157,12 +164,16 @@ function watch(source, cb, options = {}) {
   }
 }
 
-watch(
-  obj,
-  (newValue, oldValue) => {
-    console.log(newValue, oldValue);
-  },
-  { immediate: true }
-);
+watch(obj, async (newValue, oldValue, onInvalidate) => {
+  let expired = false;
+  onInvalidate(() => {
+    expired = true;
+  });
+
+  const res = await fetch("www.google.com");
+  if (!expired) {
+    finalData = res;
+  }
+});
 
 obj.foo++;
