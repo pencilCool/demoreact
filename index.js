@@ -125,7 +125,13 @@ function traverse(value, seen = new Set()) {
   return value;
 }
 function watch(source, cb) {
-  effect(() => traverse(source), {
+  let getter;
+  if (typeof source === "function") {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+  effect(() => getter(), {
     scheduler() {
       cb();
     },
