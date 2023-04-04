@@ -131,15 +131,20 @@ function watch(source, cb) {
   } else {
     getter = () => traverse(source);
   }
-  effect(() => getter(), {
+  const effectFn = effect(() => getter(), {
+    lazy: true,
     scheduler() {
-      cb();
+      newValue = effectFn();
+      cb(newValue, oldValue);
+      oldValue = newValue;
     },
   });
+  oldValue = effectFn();
 }
 
-watch(obj, () => {
-  console.log("data change");
+watch(obj, (newValue, oldValue) => {
+  console.log(newValue, oldValue);
 });
 
+obj.foo++;
 obj.foo++;
