@@ -114,8 +114,18 @@ function computed(getter) {
   return obj;
 }
 
+function traverse(value, seen = new Set()) {
+  if (typeof value !== "object" || value === null || seen.has(value)) {
+    return;
+  }
+  seen.add(value);
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+  return value;
+}
 function watch(source, cb) {
-  effect(() => source.foo, {
+  effect(() => traverse(source), {
     scheduler() {
       cb();
     },
