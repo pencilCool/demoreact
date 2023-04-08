@@ -2,15 +2,9 @@ function createRenderer(options) {
   const {
     createElement,
     insert,
-    setElementText
+    setElementText,
+    patchProps
   } = options
-
-
-  function shouldSetAsProsp(el,key,value) {
-    if(key === 'form' && el.tagName ==='INPUT') return false
-    return key in el
-  }
-
 
   function mountElement(vnode,container) {
     const el = vnode.el =  createElement(vnode.type)
@@ -24,10 +18,15 @@ function createRenderer(options) {
 
     if(vnode.props) {
       for (const key in vnode.props) {
-        patchProps(el,key,null,vnode.props)
+        patchProps(el,key,null,vnode.props[key])
       }
     }
     insert(el,container)
+  }
+
+
+  function patchElement(vnode,container) {
+
   }
 
   function patch(n1,n2,container) {
@@ -71,10 +70,17 @@ function createRenderer(options) {
 }
 
 
+function shouldSetAsProps(el,key,value) {
+  if(key === 'form' && el.tagName ==='INPUT') return false
+  return key in el
+}
+
+
 const renderer = createRenderer({
   createElement(tag) {
     console.log(`create element ${tag}`)
-    return {tag}
+    // return {tag}
+    return document.createElement(tag)
   },
   setElementText(el,text) {
     console.log(`set ${JSON.stringify(el)} text:${text}`)
@@ -82,16 +88,21 @@ const renderer = createRenderer({
   },
   insert(el,parent,anchor=null) {
     console.log(`add ${JSON.stringify(el)} to ${JSON.stringify(parent)}`)
-    parent.children = el
+    parent.insertBefore(el,anchor)
   },
   patchProps(el,key,prevValue,nextValue) {
     if(/^on/.test(key)) {
-      let invoker = el._vei
+      const  invokers = el._vei || (el._vei = {})
+      let invoker = invokers[key]
       const name = key.slice(2).toLowerCase()
       if(nextValue) {
         if(!invoker) {
-          invoker = el._vei = (e) => {
-            invoker.value(e)
+          invoker = el._vei[key] = (e) => {
+            if(Array.isArray(invoker.value)) {
+              invoker.value.forEach(fn=>fn(e))
+            } else {
+              invoker.value(e)
+            }
           }
           invoker.value = nextValue
           el.addEventListener(name,invoker)
@@ -105,7 +116,7 @@ const renderer = createRenderer({
     } else if(key==='class') {
       el.className = nextValue || ''
     }
-    else if(shouldSetAsProsp(el,key,nextValue)) {
+    else if(shouldSetAsProps(el,key,nextValue)) {
       const type = typeof el[key]
       const value = vnode.props[key]
       if (type === 'boolean' && nextValue === '') {
@@ -119,18 +130,18 @@ const renderer = createRenderer({
   }
 })
 
-const vnode = {
-  type:'h1',
-  props:{
-    id:'foo'
-  },
-  children:[
-    {
-      type:'p',
-      children:'hello'
-    }
-  ]
-}
+// const vnode = {
+//   type:'h1',
+//   props:{
+//     id:'foo'
+//   },
+//   children:[
+//     {
+//       type:'p',
+//       children:'hello'
+//     }
+//   ]
+// }
 
-const container = {type:'root'}
-renderer.render(vnode,container)
+// const container = {type:'root'}
+// renderer.render(vnode,container)
