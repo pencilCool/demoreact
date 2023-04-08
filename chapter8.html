@@ -19,7 +19,8 @@
           type:'div',
           props:bol.value? {
             onClick:()=> {
-              alert("father node click")
+              // alert("father node click")
+              console.log("div click")
             }
           }:{},
           children:[
@@ -34,7 +35,8 @@
               children:'text'
             }
           ]
-        }     
+        }    
+        console.log("effect") 
         renderer.render(vnode,document.querySelector('#app'))
       })
   </script>
